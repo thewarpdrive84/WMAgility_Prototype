@@ -1,131 +1,137 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using WMAgility.Data;
 using WMAgility.Models;
+using WMAgility.Models.ViewModels;
 
 namespace WMAgility.Controllers
 {
     public class DogsController : Controller
     {
         private readonly ApplicationDbContext _db;
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public DogsController(ApplicationDbContext db)
+        public DogsController(ApplicationDbContext db, IWebHostEnvironment webHostEnvironment)
         {
             _db = db;
+            _webHostEnvironment = webHostEnvironment;
         }
-
-        // GET: Dogs
         public IActionResult Index()
         {
             IEnumerable<Dog> objList = _db.Dogs;
+
             return View(objList);
         }
 
-        // GET: Dogs/Details/5
-        public async Task<IActionResult> Details(int? id)
+        //GET - UpDog
+        public IActionResult UpDog(int? id)
         {
+
+            DogViewModel dogViewModel = new DogViewModel()
+            {
+                Dog = new Dog()
+            };
+            
             if (id == null)
             {
-                return NotFound();
+                //for create new dog
+                return View(dogViewModel);
             }
 
-            var dog = await _db.Dogs
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (dog == null)
+            else
             {
-                return NotFound();
-            }
-
-            return View(dog);
-        }
-
-        // GET: Dogs/Create
-        public IActionResult Create()
-        {
-            return View();
-        }
-
-        // POST: Dogs/Create
-        //POST - CREATE
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult Create(Dog obj)
-        {
-            if (ModelState.IsValid)
-            {
-                _db.Dogs.Add(obj);
-                _db.SaveChanges();
-                return RedirectToAction("Index");
-            }
-            return View(obj);
-        }
-
-        // GET: Dogs/Edit/5
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var dog = await _db.Dogs.FindAsync(id);
-            if (dog == null)
-            {
-                return NotFound();
-            }
-            return View(dog);
-        }
-
-        // POST: Dogs/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to, for 
-        // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,DogName,Breed,DOB,Image")] Dog dog)
-        {
-            if (id != dog.Id)
-            {
-                return NotFound();
-            }
-
-            if (ModelState.IsValid)
-            {
-                try
+                dogViewModel.Dog = _db.Dogs.Find(id);
+                if (dogViewModel.Dog == null)
                 {
-                    _db.Update(dog);
-                    await _db.SaveChangesAsync();
+                    return NotFound();
                 }
-                catch (DbUpdateConcurrencyException)
+                return View(dogViewModel);
+            }
+        }
+
+        //POST - UpDog
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult UpDog(DogViewModel dogViewModel)
+        {
+            if (ModelState.IsValid)
+            {
+                var files = HttpContext.Request.Form.Files;
+                string webRootPath = _webHostEnvironment.WebRootPath;
+
+                if (dogViewModel.Dog.Id == 0)
                 {
-                    if (!DogExists(dog.Id))
+                    //creating
+                    string upload = webRootPath + WebConstants.ImagePath;
+                    string fileName = Guid.NewGuid().ToString();
+                    string extension = Path.GetExtension(files[0].FileName);
+
+                    using (var fileStream = new FileStream(Path.Combine(upload, fileName + extension), FileMode.Create))
                     {
-                        return NotFound();
+                        files[0].CopyTo(fileStream);
+                    }
+
+                    dogViewModel.Dog.Image = fileName + extension;
+
+                    _db.Dogs.Add(dogViewModel.Dog);
+                }
+
+                else
+                {
+                    //updating
+                    var objFromDb = _db.Dogs.AsNoTracking().FirstOrDefault(u => u.Id == dogViewModel.Dog.Id);
+
+                    if (files.Count > 0)
+                    {
+                        string upload = webRootPath + WebConstants.ImagePath;
+                        string fileName = Guid.NewGuid().ToString();
+                        string extension = Path.GetExtension(files[0].FileName);
+
+                        var oldFile = Path.Combine(upload, objFromDb.Image);
+
+                        if (System.IO.File.Exists(oldFile))
+                        {
+                            System.IO.File.Delete(oldFile);
+                        }
+
+                        using (var fileStream = new FileStream(Path.Combine(upload, fileName + extension), FileMode.Create))
+                        {
+                            files[0].CopyTo(fileStream);
+                        }
+
+                        dogViewModel.Dog.Image = fileName + extension;
                     }
                     else
                     {
-                        throw;
+                        dogViewModel.Dog.Image = objFromDb.Image;
                     }
+                    _db.Dogs.Update(dogViewModel.Dog);
                 }
-                return RedirectToAction(nameof(Index));
+
+                _db.SaveChanges();
+                return RedirectToAction("Index");
             }
-            return View(dog);
+            
+            return View(dogViewModel);
         }
 
-        // GET: Dogs/Delete/5
-        public async Task<IActionResult> Delete(int? id)
+
+        //GET - DELETE
+        public IActionResult Delete(int? id)
         {
             if (id == null)
             {
                 return NotFound();
             }
+            Dog dog = _db.Dogs.FirstOrDefault(u => u.Id == id);
 
-            var dog = await _db.Dogs
-                .FirstOrDefaultAsync(m => m.Id == id);
             if (dog == null)
             {
                 return NotFound();
@@ -134,20 +140,32 @@ namespace WMAgility.Controllers
             return View(dog);
         }
 
-        // POST: Dogs/Delete/5
+        //POST - DELETE
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
+        public IActionResult DeleteConfirmed(int? id)
         {
-            var dog = await _db.Dogs.FindAsync(id);
-            _db.Dogs.Remove(dog);
-            await _db.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+            var obj = _db.Dogs.Find(id);
+            if (obj == null)
+            {
+                return NotFound();
+            }
+
+            string upload = _webHostEnvironment.WebRootPath + WebConstants.ImagePath;
+
+            var oldFile = Path.Combine(upload, obj.Image);
+
+            if (System.IO.File.Exists(oldFile))
+            {
+                System.IO.File.Delete(oldFile);
+            }
+
+            _db.Dogs.Remove(obj);
+            _db.SaveChanges();
+            return RedirectToAction("Index");
+
         }
 
-        private bool DogExists(int id)
-        {
-            return _db.Dogs.Any(e => e.Id == id);
-        }
+
     }
 }

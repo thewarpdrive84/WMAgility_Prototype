@@ -36,11 +36,14 @@ namespace WMAgility.Models
             public string Length { get; set; }
 
             [Display(Name = "Faults:")]
+            [EnumDataType(typeof(Faults))]
             public Faults Faults { get; set; }
 
             [Display(Name = "Placement:")]
+            [EnumDataType(typeof(Placement))]
             public Placement Placement { get; set; }
 
+            [EnumDataType(typeof(Surface))]
             [Display(Name = "Surface:")]
             public Surface Surface { get; set; }
 

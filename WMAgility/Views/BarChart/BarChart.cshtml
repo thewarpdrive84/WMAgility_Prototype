@@ -1,0 +1,58 @@
+﻿<div class="container">
+    <div class="row">
+        <div class="col-md-6">
+            <h4 style="margin-left:200px">Pie Chart</h4>
+            <div id="chart1"></div>
+        </div>
+    </div>
+
+    @section scripts{
+        <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+        <script>
+            google.charts.load('current', { 'packages': ['corechart'] });
+            google.charts.setOnLoadCallback(drawChart);
+
+            function drawChart() {
+                var data = new google.visualization.DataTable();
+                data.addColumn('string', 'Skill');
+                data.addColumn('number', 'Date');
+                data.addRows([
+                    ['Round 1', { v: 30, f: '30%' }],
+                    ['Round 2', { v: 20, f: '20%' }],
+                    ['Round 3', { v: 10, f: '10%' }],
+                    ['Round 4', { v: 10, f: '10%' }],
+                    ['Round 5', { v: 30, f: '30%' }]
+                ]);
+
+                // Simple Pie Chart:
+                var option = {
+                    title: 'SeeSaw',
+                    width: 1000,
+                    height: 800
+                };
+
+                var chart = new google.visualization.PieChart(document.getElementById('chart1'));
+                chart.draw(data, option);
+
+                //3D Pie Chart:
+                option.is3D = true;
+                chart = new google.visualization.PieChart(document.getElementById('chart2'));
+                chart.draw(data, option);
+
+                // Exploded Pie Chart:
+                option.is3D = false;
+                option.slices = {
+                    1: { offset: 0.3 },
+                    3: { offset: 0.5 }
+                };
+                chart = new google.visualization.PieChart(document.getElementById('chart3'));
+                chart.draw(data, option);
+
+                // Exploded 3D Pie Chart:
+                option.is3D = true;
+                chart = new google.visualization.PieChart(document.getElementById('chart4'));
+                chart.draw(data, option);
+            }
+        </script>
+    }
+</div>

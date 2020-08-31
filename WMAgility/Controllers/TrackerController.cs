@@ -31,5 +31,21 @@ namespace WMAgility.Controllers
 
             return View(skillList);
         }
+
+        public IActionResult Remove(int id)
+        {
+            List<Tracker> trackerList = new List<Tracker>();
+            if (HttpContext.Session.Get<IEnumerable<Tracker>>(WebConstants.SessionTrack) != null
+                && HttpContext.Session.Get<IEnumerable<Tracker>>(WebConstants.SessionTrack).Count() > 0)
+            {
+                //session exists
+                trackerList = HttpContext.Session.Get<List<Tracker>>(WebConstants.SessionTrack);
+            }
+
+            trackerList.Remove(trackerList.FirstOrDefault(u => u.SkillId == id));
+            HttpContext.Session.Set(WebConstants.SessionTrack, trackerList);
+
+            return RedirectToAction(nameof(Index));
+        }
     }
 }
