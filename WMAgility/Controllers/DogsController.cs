@@ -31,7 +31,7 @@ namespace WMAgility.Controllers
         }
 
         //GET - UpDog
-        public IActionResult UpDog(int? id)
+        public IActionResult UpDog(int? id)                 //what's up dog?
         {
 
             DogViewModel dogViewModel = new DogViewModel()

@@ -14,6 +14,7 @@ namespace WMAgility.Controllers
             return View();
         }
 
+        // Not a bar chart, a pie chart with hardcoded values as temporary placeholder
         [HttpGet]
         public IActionResult BarChart()
         {

@@ -16,7 +16,7 @@ namespace WMAgility.Models
         public string Description { get; set; }
         public string Image { get; set; }
 
-        public int CanineId { get; set; }
+        public int CanineId { get; set; }       
         [ForeignKey("CanineId")]
         public virtual Dog Dog { get; set; }
     }

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace WMAgility.Models
 {
+    //Not currently in use, hardcoded values in view
     public class BarChart
     {
         public string SkillName { get; set; }
