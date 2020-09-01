@@ -28,6 +28,9 @@
                     <th>
                         Date Of Birth
                     </th>
+                    <th>
+                        Image
+                    </th>
                     <th></th>
                 </tr>
             </thead>
@@ -38,6 +41,8 @@
                         <td width="50%">@obj.DogName</td>
                         <td width="50%">@obj.Breed</td>
                         <td width="50%">@obj.DOB</td>
+                        <td width="50%"><img src="@WebConstants.ImagePath@obj.Image" width="100" style="border-radius: 5px; border:1px solid #bbb;" />
+                        </td>
                         <td class="text-center">
                             <div class="w-75 btn-group" role="group">
                                 <a asp-controller="Dogs" asp-action="UpDog" asp-route-Id="@obj.Id" class="btn btn-primary mx-2">Edit</a>
